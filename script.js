@@ -7,18 +7,20 @@ canvas.height = window.innerHeight;
 let fillStartX = 0;
 let fillStartY = 40;
 let fillEndX = 250;
-
+let adjustY = 10;
+let adjustX = 0;
 //
 canvasContext.fillStyle = "white";
-canvasContext.font = "35px Verdana";
-canvasContext.fillText("omid", fillStartX, fillStartY);
+canvasContext.font = "45px Verdana";
+canvasContext.fillText("OM", fillStartX, fillStartY);
 
-const getImageData = canvasContext.getImageData(
-  fillStartX,
-  fillStartY,
+const getImageDataCoordinate = canvasContext.getImageData(
+  0,
+  0,
   fillEndX,
   fillEndX
 );
+
 // canvasContext.strokeStyle = "white";
 
 // canvasContext.strokeRect(0, 0, fillEndX, fillEndX);
@@ -85,11 +87,28 @@ class particle {
 
 function addParticle() {
   particles = [];
-  for (let n = 0; n < 500; n++) {
-    let randomx = Math.random() * window.innerWidth;
-    let randomy = Math.random() * window.innerHeight;
-    particles.push(new particle(randomx, randomy));
+  // for (let n = 0; n < 500; n++) {
+  //   let randomx = Math.random() * window.innerWidth;
+  //   let randomy = Math.random() * window.innerHeight;
+  //   particles.push(new particle(randomx, randomy));
+  // }
+  // console.log(getImageDataCoordinate.data);
+
+  let cordinatesHeight = getImageDataCoordinate.height;
+  let cordinatesWidth = getImageDataCoordinate.width;
+
+  for (let y = 0; y < cordinatesHeight; y++) {
+    for (let x = 0; x < cordinatesWidth; x++) {
+      if (
+        getImageDataCoordinate.data[y * 4 * cordinatesWidth + x * 4 + 3] > 128
+      ) {
+        let positionX = x + adjustX;
+        let positiony = y + adjustY;
+        particles.push(new particle(positionX * 10, positiony * 10));
+      }
+    }
   }
+  console.log(particles.length);
 }
 addParticle();
 
@@ -99,6 +118,27 @@ function animateParticles() {
     particles[i].drawPartciler();
     particles[i].update();
   }
+  connectParticles();
   requestAnimationFrame(animateParticles);
 }
 animateParticles();
+
+function connectParticles() {
+  let lineOpasity = 1;
+  for (let a = 0; a < particles.length; a++) {
+    for (let b = a; b < particles.length; b++) {
+      let distancex = particles[a].x - particles[b].x;
+      let distancey = particles[a].y - particles[b].y;
+      let distance = Math.sqrt(Math.pow(distancex, 2) + Math.pow(distancey, 2));
+      if (distance < 30) {
+        lineOpasity = 1 - distance / 30;
+        canvasContext.strokeStyle = "rgba(255,255,255," + lineOpasity + ")";
+        canvasContext.lineWidth = 2;
+        canvasContext.beginPath();
+        canvasContext.moveTo(particles[a].x, particles[a].y);
+        canvasContext.lineTo(particles[b].x, particles[b].y);
+        canvasContext.stroke();
+      }
+    }
+  }
+}

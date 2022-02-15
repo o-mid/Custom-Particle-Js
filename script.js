@@ -32,6 +32,7 @@ const mouse = {
 window.addEventListener("mousemove", function (e) {
   mouse.x = e.x;
   mouse.y = e.y;
+
   // console.log(mouse.x, mouse.y);
 });
 
@@ -44,7 +45,7 @@ class particle {
     this.particleRadius = 3;
     this.basex = this.x;
     this.basey = this.y;
-    this.speed = Math.random() * 20 + 1;
+    this.density = Math.random() * 100 + 1;
   }
   drawPartciler() {
     canvasContext.fillStyle = "white";
@@ -53,14 +54,31 @@ class particle {
     canvasContext.closePath();
     canvasContext.fill();
   }
-  updateLocation() {
+  update() {
     let dx = mouse.x - this.x;
     let dy = mouse.y - this.y;
     let distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-    if (distance < 100) {
-      this.particleRadius = 7;
+    let moveX = dx / distance;
+    let moveY = dy / distance;
+    let maxdistance = mouse.radius;
+    let calculateSpeed = (maxdistance - distance) / maxdistance;
+    let directionX = moveX * calculateSpeed * this.density;
+    let directionY = moveY * calculateSpeed * this.density;
+
+    if (distance < mouse.radius) {
+      this.x -= directionX;
+      this.y -= directionY;
+
+      //this.particleRadius = 7;
     } else {
-      this.particleRadius = 3;
+      if (this.x !== this.basex) {
+        let dx = this.x - this.basex;
+        this.x -= dx / 7;
+      }
+      if (this.y !== this.basey) {
+        let dy = this.y - this.basey;
+        this.y -= dy / 7;
+      }
     }
   }
 }
@@ -79,7 +97,7 @@ function animateParticles() {
   canvasContext.clearRect(0, 0, canvas.width, canvas.height);
   for (var i = 0; i < particles.length; i++) {
     particles[i].drawPartciler();
-    particles[i].updateLocation();
+    particles[i].update();
   }
   requestAnimationFrame(animateParticles);
 }
